@@ -1,3 +1,89 @@
+-- MOD OPTIONS
+
+local SINGLE_CLICK = 1
+local DOUBLE_CLICK = 2
+
+local HOLD_PATHING = 1
+local HOLD_SIMPLE = 2
+
+local OPTIONS = {
+  isClickToMove = true,
+  clickToMoveStyle = SINGLE_CLICK,
+
+  isHoldToMove = true,
+  holdToMoveStyle = HOLD_PATHING,
+
+  isClickToInteract = true,
+
+  isHighlightGround = true,
+  isHighlightObjects = true,
+}
+
+if ModOptions and ModOptions.getInstance then
+  local settings = ModOptions:getInstance(OPTIONS, "CTM_OSRS", "Left Click Redux");
+
+  settings.names = {
+    isClickToMove = "Enable Click to Move",
+    clickToMoveStyle = "Click to Move Style",
+
+    isHoldToMove = "Enable Hold to Move",
+    holdToMoveStyle = "Hold to Move Style",
+
+    isClickToInteract = "Enable Click to Interact",
+
+    isHighlightGround = "Show Destination Marker",
+    isHighlightObjects = "Highlight Objects for Interaction"
+  };
+
+  local clickToMove = settings:getData("isClickToMove");
+  function clickToMove:OnApplyInGame(val)
+    OPTIONS.isClickToMove = val;
+  end
+
+  local clickStyleDrop = settings:getData("clickToMoveStyle");
+  clickStyleDrop[SINGLE_CLICK] = "Single Click"
+  clickStyleDrop[DOUBLE_CLICK] = "Double Click"
+  function clickStyleDrop:OnApplyInGame(val)
+    OPTIONS.clickToMoveStyle = val;
+  end
+
+  local holdToMove = settings:getData("isHoldToMove");
+  function holdToMove:OnApplyInGame(val)
+    OPTIONS.isHoldToMove = val;
+  end
+
+  local holdStyleDrop = settings:getData("holdToMoveStyle");
+  holdStyleDrop[HOLD_PATHING] = "Normal"
+  holdStyleDrop[HOLD_SIMPLE] = "Simple"
+  holdStyleDrop.tooltip = "The movement style when using hold to move.\nNormal: Uses pathfinding to move towards the cursor.\nSimple: The player moves straight towards the cursor, regardless of walls and obstacles."
+  function holdStyleDrop:OnApplyInGame(val)
+    OPTIONS.holdToMoveStyle = val;
+  end
+  
+  local clickToInteract = settings:getData("isClickToInteract");
+  function clickToInteract:OnApplyInGame(val)
+    OPTIONS.isClickToInteract = val;
+  end
+
+  local highlightGround = settings:getData("isHighlightGround");
+  function highlightGround:OnApplyInGame(val)
+    OPTIONS.isHighlightGround = val;
+  end
+
+  local highlightObjects = settings:getData("isHighlightObjects");
+  function highlightObjects:OnApplyInGame(val)
+    OPTIONS.isHighlightObjects = val;
+  end
+end
+
+
+
+
+
+
+
+-- UTIL
+
 local Util = {}
 
 function Util.isPlayerReady(player)
@@ -105,8 +191,14 @@ end
 
 
 
-LeftClickRedux = {}
 
+
+
+
+-- LEFT CLICK REDUX
+
+LeftClickRedux = {}
+LeftClickRedux.clickData = {prevX=0, prevY=0};
 LeftClickRedux.mouseDown = false;
 LeftClickRedux.tickCounter = 0;
 
@@ -124,7 +216,7 @@ function LeftClickRedux.onTick()
 		return;
 	end
 
-	if not LeftClickRedux.holdToMoveAction and LeftClickRedux.tickCounter >= 20 then
+	if OPTIONS.isHoldToMove and not LeftClickRedux.holdToMoveAction and LeftClickRedux.tickCounter >= 20 then
 		LeftClickRedux.clearActionQueue(player);
 		local location = Util.findPathableLocationFromMouse(player);
 		if location then
@@ -159,6 +251,21 @@ function LeftClickRedux.cancelHoldToMoveAction()
 	end
 end
 
+function LeftClickRedux.isDoubleClick(x, y)
+	local data = LeftClickRedux.clickData;
+    if data.lastClickTime ~= nil and UIManager.isDoubleClick(data.prevX, data.prevY, x, y, data.lastClickTime) then
+        data.isDoubleClick = true
+    else
+        data.isDoubleClick = false
+    end
+    data.lastClickTime = getTimestampMs()
+
+    data.prevX = x;
+    data.prevY = y;
+
+    return data.isDoubleClick;
+end
+
 function LeftClickRedux.onDown(object, rawX, rawY)
 	local playerNumber = 0;
 	local player = getSpecificPlayer(playerNumber);
@@ -168,8 +275,9 @@ function LeftClickRedux.onDown(object, rawX, rawY)
 	end
 
 	LeftClickRedux.mouseDown = true;
+	local isDblClick = LeftClickRedux.isDoubleClick(rawX, rawY);
 
-	if object ~= nil then
+	if OPTIONS.isClickToInteract and object ~= nil then
 		local isInteractable = Util.isInteractableObject(object);
 		if isInteractable or object:getContainer() then
 			LeftClickRedux.moveToObject(player, object, isInteractable, rawX, rawY);
@@ -177,14 +285,20 @@ function LeftClickRedux.onDown(object, rawX, rawY)
 		end
 	end
 
-	local zoom = getCore():getZoom(playerNumber);
-	local x = rawX * zoom;
-	local y = rawY * zoom;
-	local z = player:getZ();
-	local gridX, gridY = ISCoordConversion.ToWorld(x, y, z);
-	
-	local targetSquare = Util.findPathableSquare(gridX, gridY, z);
-	LeftClickRedux.moveToSquare(player, targetSquare);
+	if OPTIONS.isClickToMove then
+		if OPTIONS.clickToMoveStyle == DOUBLE_CLICK and not isDblClick then
+			return
+		end
+
+		local zoom = getCore():getZoom(playerNumber);
+		local x = rawX * zoom;
+		local y = rawY * zoom;
+		local z = player:getZ();
+		local gridX, gridY = ISCoordConversion.ToWorld(x, y, z);
+		
+		local targetSquare = Util.findPathableSquare(gridX, gridY, z);
+		LeftClickRedux.moveToSquare(player, targetSquare);
+	end
 end
 
 function LeftClickRedux.moveToObject(player, object, isInteractable, rawX, rawY)
@@ -312,7 +426,7 @@ end
 
 function LeftClickRedux.highlightSquare(square)
 	LeftClickRedux.clearSquareHighlight();
-	if square then
+	if OPTIONS.isHighlightGround and square then
 		LeftClickRedux.groundMarker = getWorldMarkers():addGridSquareMarker(square, 0.1, 0.9, 0.6, true, 0.55)
 		LeftClickRedux.groundMarkerSquare = square;
 	end
@@ -332,7 +446,7 @@ end
 
 function LeftClickRedux.highlightObject(object)
 	LeftClickRedux.clearObjectHighlight();
-	if object then
+	if OPTIONS.isHighlightObjects and object then
 		object:setOutlineHighlight(true);
 		LeftClickRedux.lastHighlighted = object;
 	end
