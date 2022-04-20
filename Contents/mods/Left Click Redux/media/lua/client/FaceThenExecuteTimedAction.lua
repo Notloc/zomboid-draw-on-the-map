@@ -7,11 +7,10 @@ function FaceThenExecuteTimedAction:isValid()
 end
 
 function FaceThenExecuteTimedAction:waitToStart()
-	if self.executeWhileTurning and not self.executedLambda then
+	if self.executeWhileTurning then
 		if self.lambda then
 			self.lambda();
 		end
-		self.executedLambda = true;
 	end
 
 	self.character:faceThisObject(self.target)
@@ -28,7 +27,7 @@ function FaceThenExecuteTimedAction:start()
         self.onStartFunc(args[1], args[2], args[3], args[4])
     end
 
-    if self.lambda and not self.executedLambda then
+    if self.lambda then
 		self.lambda();
 	end
 	self:forceComplete();

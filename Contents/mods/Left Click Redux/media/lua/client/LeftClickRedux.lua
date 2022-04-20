@@ -237,8 +237,10 @@ function LeftClickRedux.moveToObject(player, object, isInteractable, rawX, rawY)
 			ISObjectClickHandler.doClick(object, rawX, rawY);
 		end;
 	end
+
+	local executeWhileTurning = container ~= nil;
 	ISTimedActionQueue.add(
-		LeftClickRedux.createFaceThenExecuteAction(player, object, followUpAction)
+		LeftClickRedux.createFaceThenExecuteAction(player, object, followUpAction, executeWhileTurning)
 	);
 end
 
