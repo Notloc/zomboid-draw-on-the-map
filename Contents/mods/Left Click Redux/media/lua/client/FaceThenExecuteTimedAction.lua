@@ -13,7 +13,12 @@ function FaceThenExecuteTimedAction:waitToStart()
 		end
 	end
 
-	self.character:faceThisObject(self.target)
+	if self.isTargetWorldObject then
+		self.character:faceLocationF(self.target:getWorldPosX(), self.target:getWorldPosY());
+	else
+		self.character:faceThisObject(self.target)
+	end
+
 	return self.character:shouldBeTurning()
 end
 
@@ -69,5 +74,6 @@ function FaceThenExecuteTimedAction:new(character, target, lambda, executeWhileT
 	o.lambda = lambda
 	o.maxTime = -1
 	o.executeWhileTurning = executeWhileTurning
+	o.isTargetWorldObject = instanceof(target, "IsoWorldInventoryObject");
 	return o
 end    	
