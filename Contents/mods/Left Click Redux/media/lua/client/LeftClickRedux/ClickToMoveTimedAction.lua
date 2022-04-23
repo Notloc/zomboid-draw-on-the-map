@@ -2,12 +2,15 @@ require "TimedActions/WalkToTimedAction"
 
 ClickToMoveTimedAction = ISWalkToTimedAction:derive("ClickToMoveTimedAction");
 
-function ClickToMoveTimedAction:start()
-    ISWalkToTimedAction.start(self);
+function ClickToMoveTimedAction:isValid()
+    return not self.character:getVehicle()
+end
 
+function ClickToMoveTimedAction:start()
+    self:updateTargetLocation(self.target)
     if self.onStartFunc then
         local args = self.onStartArgs
-        self.onStartFunc(args[1], args[2], args[3], args[4])
+        self.onStartFunc(self)
     end
 end
 
@@ -16,7 +19,7 @@ function ClickToMoveTimedAction:stop()
 
     if self.onStopFunc then
         local args = self.onStopArgs
-        self.onStopFunc(args[1], args[2], args[3], args[4])
+        self.onStopFunc(self)
     end
 end
 
@@ -25,21 +28,28 @@ function ClickToMoveTimedAction:perform()
 
     if self.onStopFunc then
         local args = self.onStopArgs
-        self.onStopFunc(args[1], args[2], args[3], args[4])
+        self.onStopFunc(self)
     end
 end
 
-function ClickToMoveTimedAction:setOnStart(func, arg1, arg2, arg3, arg4)
+function ClickToMoveTimedAction:setOnStart(func)
     self.onStartFunc = func
-    self.onStartArgs = { arg1, arg2, arg3, arg4 }
 end
 
-function ClickToMoveTimedAction:setOnStop(func, arg1, arg2, arg3, arg4)
+function ClickToMoveTimedAction:setOnStop(func)
     self.onStopFunc = func
-    self.onStopArgs = { arg1, arg2, arg3, arg4 }
 end
 
-function ClickToMoveTimedAction:new (character, location, additionalTest, additionalContext)
+function ClickToMoveTimedAction:updateTargetLocation(target)
+    self.target = target;
+    if instanceof(target, "IsoGridSquare") or instanceof(target, "IsoObject") then
+        self.character:getPathFindBehavior2():pathToLocation(target:getX(), target:getY(), target:getZ());
+    else
+        self.character:getPathFindBehavior2():pathToLocationF(target.x, target.y, target.z);
+    end
+end
+
+function ClickToMoveTimedAction:new (character, target, additionalTest, additionalContext)
     local o = {}
     setmetatable(o, self)
     self.__index = self
@@ -48,7 +58,7 @@ function ClickToMoveTimedAction:new (character, location, additionalTest, additi
     o.stopOnWalk = false;
     o.stopOnRun = false;
     o.maxTime = -1;
-    o.location = location;
+    o.target = target;
     o.pathIndex = 0;
     o.additionalTest = additionalTest;
     o.additionalContext = additionalContext;

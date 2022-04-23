@@ -87,6 +87,10 @@ end
 
 
 ItemUtil.equipWeapon = function(player, weapon, primary, twoHands)
+	if not player:getInventory():contains(invItem) then
+		return;
+	end
+
 	-- Drop corpse or generator
 	if isForceDropHeavyItem(player:getPrimaryHandItem()) then
 		ISTimedActionQueue.add(ISUnequipAction:new(player, player:getPrimaryHandItem(), 50));
