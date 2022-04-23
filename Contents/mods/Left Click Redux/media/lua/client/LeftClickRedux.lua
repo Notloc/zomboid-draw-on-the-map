@@ -387,6 +387,10 @@ function LeftClickRedux.pickupItem(player, wItem, isDoubleClick)
 	LeftClickRedux.clearActionQueue(player);
 	if LeftClickRedux.isNeedsToMove(player, wItem, 1.2) or wItem:getSquare():isBlockedTo(player:getSquare()) then
 		local square = Util.getClosestSquareFromObject(wItem, player);
+		if not square then
+			return;
+		end
+
 		ISTimedActionQueue.add(
 			LeftClickRedux.createMovementAction(player, square, nil, 
 				function() 
@@ -409,6 +413,9 @@ function LeftClickRedux.moveToObject(player, object, isInteractable, rawX, rawY)
 	end
 
 	local targetSquare = Util.getClosestSquareFromObject(object, player);
+	if not targetSquare then
+		return;
+	end
 
 	local container = object:getContainer();
 
