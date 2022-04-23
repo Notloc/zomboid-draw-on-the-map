@@ -1,6 +1,7 @@
+-- Full blown copies of the original functions --
 
--- Fix bracket balancing to fix bug with diagonal tile wall detection
 
+-- Fixes bracket balancing to fix bug with diagonal tile wall detection
 AdjacentFreeTileFinder.privTrySquareForWalls = function(src, test)
     if src == nil or test == nil then return false; end
 
@@ -35,8 +36,7 @@ AdjacentFreeTileFinder.privTrySquareForWalls = function(src, test)
 end
 
 
--- Added a parameter to allow requesting diagonals to always be checked
-
+-- Adds the 'doDiagonals' parameter to allow requesting diagonals to always be checked
 AdjacentFreeTileFinder.Find = function(gridSquare, playerObj, doDiagonals)
     local choices = {}
     local choicescount = 1;

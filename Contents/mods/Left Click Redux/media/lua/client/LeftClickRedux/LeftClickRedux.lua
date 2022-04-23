@@ -22,7 +22,7 @@ local CYAN = {r=0.1, g=0.9, b=0.6, a=1};
 local YELLOW = {r=1, g=1, b=0, a=1};
 
 function LCR.onTick()
-	LCR.inventoryVisibleFlag = false;
+	LCR.inventoryClosedFlag = false;
 
 	-- OnObjectMouseUp Event was unreliable due to lack of calls when releasing over UI elements
 	if not Mouse.isButtonDown(0) then
@@ -102,7 +102,7 @@ function LCR.onDown(object, rawX, rawY)
 		local z = player:getZ();
 		local gridX, gridY = ISCoordConversion.ToWorld(x, y, z);
 		
-		if OPTIONS.isSuppressMovementThatClosesInventory and LCR.inventoryVisibleFlag then
+		if OPTIONS.isSuppressMovementThatClosesInventory and LCR.inventoryClosedFlag then
 			return;
 		end
 
