@@ -102,7 +102,7 @@ function LCR.onDown(object, rawX, rawY)
 		local z = player:getZ();
 		local gridX, gridY = ISCoordConversion.ToWorld(x, y, z);
 		
-		if OPTIONS.isSuppressMovementThatClosesInventory and LCR.inventoryClosedFlag then
+		if OPTIONS.suppressActionsWhileInventoryIsOpen and LCR.inventoryClosedFlag then
 			return;
 		end
 
@@ -121,6 +121,10 @@ function LCR.isDoubleClick(x, y)
 end
 
 function LCR.pickupItem(player, wItem, isDoubleClick)
+	if LCR.isSuppressActionsForInventory() then
+		return;
+	end
+
 	local doPickup = function()
 		local angle = Util.playerAngleTo(player, wItem);
 		if math.abs(angle) > 25 then
@@ -170,7 +174,10 @@ function LCR.moveToObject(player, object, rawX, rawY)
 	end
 
 	local hasContainer = object:getContainer() ~= nil;
-	
+	if not hasContainer and LCR.isSuppressActionsForInventory() then
+		return;
+	end
+
 	local stopCheck = nil;
 	if instanceof(object, "IsoDoor") then
 		stopCheck = function(data)
@@ -196,7 +203,7 @@ function LCR.moveToObject(player, object, rawX, rawY)
 		callback = function()
 			ISObjectClickHandler.doClick(object, rawX, rawY);
 		end;
-	else
+	elseif isNeedsToMove then
 	 	callback = function() 
 			ISObjectClickHandler.doClickSpecificObject(object, 0, player);
 		end;
@@ -363,6 +370,10 @@ function LCR.clearObjectHighlight()
 		LCR.lastHighlighted:setOutlineHighlight(false);
 		LCR.lastHighlighted = nil;
 	end
+end
+
+function LCR.isSuppressActionsForInventory()
+	return OPTIONS.suppressActionsWhileInventoryIsOpen and LCR.inventoryClosedFlag;
 end
 
 Events.OnTick.Add(LCR.onTick);

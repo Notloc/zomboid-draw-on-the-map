@@ -15,7 +15,7 @@ LeftClickRedux.OPTIONS = {
 
 	isClickToMove = true,
 	clickToMoveStyle = LCR.SINGLE_CLICK,
-	isSuppressMovementThatClosesInventory = true,
+	suppressActionsWhileInventoryIsOpen = true,
 
 	isHoldToMove = true,
 	holdToMoveStyle = LCR.HOLD_PATHING,
@@ -44,7 +44,7 @@ if ModOptions and ModOptions.getInstance then
 	settings.names = {
 		isClickToMove = "Enable Click to Move",
 		clickToMoveStyle = "Click to Move Style",
-		isSuppressMovementThatClosesInventory = "Suppress Walking When Click Close Inventory",
+		suppressActionsWhileInventoryIsOpen = "Suppress Walking When Click Close Inventory",
 
 		isHoldToMove = "Enable Hold to Move",
 		holdToMoveStyle = "Hold to Move Style",
