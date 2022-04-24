@@ -32,13 +32,13 @@ function LCR.onTick()
 		return;
 	end
 
-	local playerNumber = 0;
-	local player = getSpecificPlayer(playerNumber);
-	if not LCR.mouseDown or not Util.isPlayerReady(player) or Util.isPaused() then
-		return;
-	end
-
 	if OPTIONS.isHoldToMove and not LCR.holdToMoveAction and LCR.tickCounter >= HOLD_TO_MOVE_START_DELAY then
+		local playerNumber = 0;
+		local player = getSpecificPlayer(playerNumber);
+		if not LCR.mouseDown or not Util.isPlayerReady(player) or Util.isPaused() then
+			return;
+		end
+
 		LCR.clearActionQueue(player);
 		local location = Util.findPathableLocationFromMouse(player);
 		if location then
@@ -50,6 +50,12 @@ function LCR.onTick()
 	end
 
 	if LCR.holdToMoveAction and LCR.tickCounter >= HOLD_TO_MOVE_UPDATE_DELAY then
+		local playerNumber = 0;
+		local player = getSpecificPlayer(playerNumber);
+		if not LCR.mouseDown or not Util.isPlayerReady(player) or Util.isPaused() then
+			return;
+		end
+			
 		local location = Util.findPathableLocationFromMouse(player);
 		if location then
 			LCR.holdToMoveAction:setTargetLocation(location);
