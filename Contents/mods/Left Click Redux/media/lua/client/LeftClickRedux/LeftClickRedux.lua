@@ -184,6 +184,10 @@ function LCR.pickupItem(player, wItem, isDoubleClick)
 		return;
 	end
 
+	if not Util.verifyPermission(player, wItem) then
+		return;
+	end
+
 	local doPickup = function()
 		local angle = Util.playerAngleTo(player, wItem);
 		if math.abs(angle) > 25 then
@@ -224,6 +228,10 @@ end
 
 function LCR.moveToObject(player, object, rawX, rawY, isDblClick)
 	if object == nil then
+		return;
+	end
+
+	if not Util.verifyPermission(player, object) then
 		return;
 	end
 

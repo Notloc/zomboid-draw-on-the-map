@@ -238,3 +238,8 @@ function Util.getCleanWaterObject(sqr)
 	end
 	return nil;
 end
+
+function Util.verifyPermission(player, object)
+	local safehouse = SafeHouse.getSafeHouse(object:getSquare());
+    return not safehouse or safehouse:playerAllowed(player);
+end
