@@ -10,16 +10,23 @@ function DelayedCodeExecutionTimedAction:start()
     if self.lambda then
 		self.lambda();
 	end
-	self:forceComplete();
+	if self.maxTime == -1 then
+		self:forceComplete();
+	end
 end
 
-function DelayedCodeExecutionTimedAction:new(character, lambda)
+function DelayedCodeExecutionTimedAction:new(character, lambda, time)
 	local o = {}
 	setmetatable(o, self)
 	self.__index = self
 	o.stopOnRun = false;
 	o.character = character
 	o.lambda = lambda
-	o.maxTime = -1
+
+	if not time then
+		time = -1;
+	end
+
+	o.maxTime = time
 	return o
 end

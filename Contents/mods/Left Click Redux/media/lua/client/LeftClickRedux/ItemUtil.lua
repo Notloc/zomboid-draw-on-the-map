@@ -65,7 +65,7 @@ function ItemUtil.findWorldObjectUnderMouse(playerNum, object, x, y, itemOut)
 end
 
 function ItemUtil.getWorldObjectUnderMouse(playerNum, screenX, screenY, squares, itemOut)
-	local radius = 32 / getCore():getZoom(playerNum);
+	local radius = 38 / getCore():getZoom(playerNum);
 
 	local closestDist = 1000;
 	local closest = nil;

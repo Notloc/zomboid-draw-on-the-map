@@ -37,7 +37,7 @@ function Util.findPathableLocationFromMouse(player)
 end
 
 function Util.findPathableOnIsoGrid(x, y, z)
-	z =  math.floor(z + 0.28); -- Round up if close, makes stairs work
+	z =  Util.roundZ(z);
 
 	local square = getCell():getGridSquare(x, y, z);
 	while (square == nil or not square:TreatAsSolidFloor()) and z > 0 do
@@ -54,10 +54,26 @@ function Util.findPathableOnIsoGrid(x, y, z)
 	return square, location;
 end
 
+function Util.roundZ(z)
+	return math.floor(z + 0.345); -- Round up if close, makes stairs work
+end
+
+function Util.findLocationFromMouse(player)
+	local x = Mouse.getX();
+	local y = Mouse.getY();
+	local z = Util.roundZ(player:getZ());
+	return ISCoordConversion.ToWorld(x, y, z);
+end
+
 function Util.isInteractableObject(object)
 	return  instanceof(object, "IsoCurtain") or 
 			instanceof(object, "IsoDoor") or instanceof(object, "IsoLightSwitch") or 
-			instanceof(object, "IsoThumpable") or instanceof(object, "IsoWindow");
+			instanceof(object, "IsoThumpable") or instanceof(object, "IsoWindow") or
+			Util.isAltInteractableObject(object);
+end
+
+function Util.isAltInteractableObject(object)
+	return instanceof(object, "IsoRadio") or instanceof(object, "IsoTelevision");
 end
 
 -- Lots of heuristics since I couldn't get pathfinding to return a path immediately
@@ -160,4 +176,65 @@ function Util.isInventoryOpenAndNotPinned(playerNumber)
 	local invWindow = getPlayerInventory(playerNumber);
 	local lootWindow = getPlayerLoot(playerNumber);
 	return (invWindow.isVisible and not invWindow.isCollapsed and not invWindow.pin) or (lootWindow.isVisible and not lootWindow.isCollapsed and not lootWindow.pin);
+end
+
+function Util.checkHopFlagByDirection(sqr, x, y)
+	if not sqr then
+		return false;
+	end
+
+	sqr = sqr:getProperties();
+	if math.abs(x) > math.abs(y) then
+		if x > 0 then
+			return sqr:Is(IsoFlagType.HoppableE);
+		else
+			return sqr:Is(IsoFlagType.HoppableW);
+		end
+	else
+		if y < 0 then
+			return sqr:Is(IsoFlagType.HoppableN);
+		else
+			return sqr:Is(IsoFlagType.HoppableS);
+		end
+	end
+end
+
+function Util.sign(val)
+	return val / math.abs(val);
+end
+
+function Util.roundInputDirectionAndNormalize(x, y)
+	if math.abs(x) > math.abs(y) then
+		x = Util.sign(x);
+		y = 0;
+	else
+		x = 0;
+		y = Util.sign(y);
+	end
+	return x,y;
+end
+
+function Util.findEndOfStairs(sqr, x, y)
+	x,y = Util.roundInputDirectionAndNormalize(x,y);
+	local cell = getCell();
+	local z = sqr:getApparentZ(sqr:getX(), sqr:getY());
+	while sqr and sqr:HasStairs() do
+		sqr = Util.findPathableOnIsoGrid(x + sqr:getX() + 0.5, y + sqr:getY() + 0.5, z);
+		if sqr then
+			z = sqr:getApparentZ(sqr:getX(), sqr:getY());
+		end
+	end
+	return sqr;
+end
+
+
+function Util.getCleanWaterObject(sqr)
+	local objects = sqr:getObjects();
+	for i = 0, objects:size()-1 do
+		local obj = objects:get(i);
+		if obj:hasWater() and not obj:isTaintedWater() then
+			return obj;
+		end
+	end
+	return nil;
 end

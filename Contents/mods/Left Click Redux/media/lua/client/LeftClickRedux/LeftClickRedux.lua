@@ -2,10 +2,6 @@ require 'LeftClickRedux/LeftClickReduxOptions'
 require 'LeftClickRedux/ItemUtil'
 require 'LeftClickRedux/Util'
 
-if not LeftClickRedux then
-	LeftClickRedux = {}
-end
-
 local LCR = LeftClickRedux;
 
 LCR.clickData = {lastClickTime=0, prevX=0, prevY=0};
@@ -16,7 +12,7 @@ local OPTIONS = LCR.OPTIONS;
 local ENUMS = LCR.OPTIONS.ENUMS;
 
 local HOLD_TO_MOVE_START_DELAY = 20;
-local HOLD_TO_MOVE_UPDATE_DELAY = 6;
+local HOLD_TO_MOVE_UPDATE_DELAY = 4;
 
 local CYAN = {r=0.1, g=0.9, b=0.6, a=1};
 local YELLOW = {r=1, g=1, b=0, a=1};
@@ -55,18 +51,75 @@ function LCR.onTick()
 		if not LCR.mouseDown or not Util.isPlayerReady(player) or Util.isPaused() then
 			return;
 		end
-			
+
+		LCR.updateHoldToMoveAction(player);
+	end
+
+	LCR.tickCounter = LCR.tickCounter + 1;
+end
+
+function LCR.updateHoldToMoveAction(player)
+	if OPTIONS.holdToMoveStyle == ENUMS.HOLD_PATHING then
 		local location = Util.findPathableLocationFromMouse(player);
 		if location then
 			LCR.holdToMoveAction:setTargetLocation(location);
-			LCR.tickCounter = -1;
 		else
 			LCR.holdToMoveAction:forceComplete();
 			LCR.holdToMoveAction = nil;
 		end
+	elseif OPTIONS.holdToMoveStyle == ENUMS.HOLD_SIMPLE then -- Its actually complicated
+		local playerX = player:getX();
+		local playerY = player:getY();
+
+		local x, y = Util.findLocationFromMouse(player);
+		x = x - playerX;
+		y = y - playerY;
+
+		local h = math.sqrt(x*x + y*y);
+		if h < 1 * getCore():getZoom(0) then
+			return
+		end
+
+		h = h * 1.75;
+
+		local targetX = x/h + playerX;
+		local targetY = y/h + playerY;
+		local z = Util.roundZ(player:getZ());
+
+		if z % 1 ~= 0 then -- Round input direction on stairs
+			x, y = Util.roundInputDirectionAndNormalize(x,y);
+			targetX = playerX + x;
+			targetY = playerY + y;
+		end
+
+		local playerSqr = player:getSquare();
+		local targetSqr = getCell():getGridSquare(targetX, targetY, z);
+		local hopFlag = Util.checkHopFlagByDirection(playerSqr, x, y) or Util.checkHopFlagByDirection(targetSqr, -x, -y);
+
+		if targetSqr and not targetSqr:isBlockedTo(playerSqr) or hopFlag then
+			
+			if z > 0 and targetSqr and not AdjacentFreeTileFinder.privCanStand(targetSqr) then -- Check if we're going down stairs
+				z = z-1;
+				targetSqr = getCell():getGridSquare(targetX, targetY, z); 
+				if not targetSqr then
+					return
+				end
+			end
+
+			if targetSqr:getApparentZ(targetSqr:getX(), targetSqr:getY()) % 1 ~= 0 then
+				targetSqr = Util.findEndOfStairs(targetSqr, x, y);
+				if not targetSqr then
+					return;
+				end
+				targetX = targetSqr:getX();
+				targetY = targetSqr:getY();
+				z = targetSqr:getZ();
+			end
+			LCR.holdToMoveAction:setTargetLocation({x=targetX, y=targetY, z=z});
+		end
 	end
 
-	LCR.tickCounter = LCR.tickCounter + 1;
+	LCR.tickCounter = -1;
 end
 
 function LCR.onDown(object, rawX, rawY)
@@ -92,7 +145,7 @@ function LCR.onDown(object, rawX, rawY)
 	if OPTIONS.isClickToInteract and object ~= nil then
 		local isInteractable = Util.isInteractableObject(object);
 		if isInteractable or object:getContainer() then
-			LCR.moveToObject(player, object, rawX, rawY);
+			LCR.moveToObject(player, object, rawX, rawY, isDblClick);
 			return;
 		end
 	end
@@ -169,7 +222,7 @@ function LCR.pickupItem(player, wItem, isDoubleClick)
 	end
 end
 
-function LCR.moveToObject(player, object, rawX, rawY)
+function LCR.moveToObject(player, object, rawX, rawY, isDblClick)
 	if object == nil then
 		return;
 	end
@@ -196,12 +249,54 @@ function LCR.moveToObject(player, object, rawX, rawY)
 		end;
 	end
 
+	
 	local isNeedsToMove = LCR.isNeedsToMove(player, object, 1.5);
+
 	if isNeedsToMove then
 		LCR.clearActionQueue(player);	
 		LCR.moveToTarget(player, targetSquare, object, stopCheck);
 	elseif not Util:isPaused() then 
-		LCR.cancelActiveMovementAction(player); -- Cancel any active movements to prevent the player from walking away from a container they just clicked
+		LCR.cancelActiveMovementAction(player); -- Cancel any active movements to prevent the player from walking away from a container they just clicked	
+	end
+
+	local clickedNearbyOpenWindow = instanceof(object, "IsoWindow") and object:canClimbThrough(player);
+	if clickedNearbyOpenWindow then
+		LCR.GLOBALS.preventShutWindow = true;
+		if not isDblClick then
+			local tickDelay = 10;
+			LCR.queueCallback(player, nil, tickDelay); -- Give the player a chance to double click before closing the window
+		else
+			if not isNeedsToMove then
+				LCR.clearActionQueue(player);
+			end
+
+			LCR.queueCallback(player, function()
+				LCR.createClimbWindowAction(player, object);
+			end);
+			return;
+		end
+	end
+
+	if isDblClick then
+		local waterObj = Util.getCleanWaterObject(object:getSquare())
+		if waterObj then
+			LCR.createDrinkAction(player, waterObj);
+			return;
+		end
+
+		if instanceof(object, "IsoTelevision") or instanceof(object, "IsoRadio") then
+			LCR.queueCallback(player, function()
+				object:getDeviceData():setIsTurnedOn(not object:getDeviceData():getIsTurnedOn());
+			end);
+			return;
+		end
+
+		if instanceof(object, "IsoStove") then
+			LCR.queueCallback(player, function()
+				object:Toggle();
+			end);
+			return;
+		end
 	end
 
 	local callback;
@@ -209,10 +304,16 @@ function LCR.moveToObject(player, object, rawX, rawY)
 		callback = function()
 			ISObjectClickHandler.doClick(object, rawX, rawY);
 		end;
-	elseif isNeedsToMove then
-	 	callback = function() 
-			ISObjectClickHandler.doClickSpecificObject(object, 0, player);
-		end;
+	elseif isNeedsToMove or clickedNearbyOpenWindow then
+		if Util.isAltInteractableObject(object) then
+			callback = function()
+				ISObjectClickHandler.doClick(object, rawX, rawY);
+			end;
+		else
+		 	callback = function() 
+				ISObjectClickHandler.doClickSpecificObject(object, 0, player);
+			end;
+		end
 	end
 	ISTimedActionQueue.add(
 		LCR.createFaceThenExecuteAction(player, object, callback, hasContainer)
@@ -228,20 +329,27 @@ function LCR.isNeedsToMove(player, object, minDistance)
 		return true;
 	end
 
-	if instanceof(object, "IsoWindow") or instanceof(object, "IsoCurtain") then
-		minDistance = 0;
+	local otherSqr = nil;
+	if instanceof(object, "IsoWindow") then
+		minDistance = 0.2;
+		otherSqr = object:getOppositeSquare();
 	end 
-	
-	local sqr = player:getSquare();
-	local sqr2 = object:getSquare();
+	if instanceof(object, "IsoCurtain") then
+		minDistance = 0.2;
+	end
 
-	local dist = sqr:DistToProper(sqr2);
+	local playerSqr = player:getSquare();	
+	if otherSqr then
+		local otherDist = playerSqr:DistToProper(otherSqr);
+		if otherDist < minDistance then
+			return false;
+		end
+	end
+
+	local sqr = object:getSquare();
+	local dist = playerSqr:DistToProper(sqr);
 	return dist > minDistance;
 end
-
-
-
-
 
 
 function LCR.moveToTarget(player, target, objectTarget, stopCheck, color)
@@ -263,12 +371,11 @@ function LCR.moveToTarget(player, target, objectTarget, stopCheck, color)
 	);
 end
 
-function LCR.queueCallback(player, callback)
+function LCR.queueCallback(player, callback, time)
 	ISTimedActionQueue.add(
-		DelayedCodeExecutionTimedAction:new(player, callback)
+		DelayedCodeExecutionTimedAction:new(player, callback, time)
 	);
 end
-
 
 function LCR.createMovementAction(player, target, targetObject, earlyStopCheck, color)
 	if not target then
@@ -297,11 +404,33 @@ function LCR.createFaceThenExecuteAction(player, object, func, executeWhileTurni
 	return action;
 end
 
+function LCR.createDrinkAction(player, waterObject)
+	local waterAvailable = waterObject:getWaterAmount()
+	local thirst = player:getStats():getThirst()
+	local waterNeeded = math.floor((thirst + 0.005) / 0.1)
+	local waterConsumed = math.min(waterNeeded, waterAvailable)
+	ISTimedActionQueue.add(ISTakeWaterAction:new(player, nil, waterConsumed, waterObject, (waterConsumed * 10) + 15, nil));
+end
+
+
+function LCR.createClimbWindowAction(player, window)
+	if ISWorldObjectContextMenu.isTrappedAdjacentToWindow(player, window) then
+		ISTimedActionQueue.add(ISClimbThroughWindow:new(player, window, 0));
+		return;
+	end
+
+	local square = window:getSquare();
+	if luautils.walkAdjWindowOrDoor(player, square, window) then
+		ISTimedActionQueue.add(ISClimbThroughWindow:new(player, window, 0));
+	end
+end
+
 function LCR.clearActionQueue(player, force)
 	if not force and Util.isPaused() then 
 		return; -- Actions queue instead if the game is paused
 	end
 
+	LCR.cancelActiveAction(player);
 	player:StopAllActionQueue();
 	ISTimedActionQueue.clear(player);
 end
@@ -310,6 +439,13 @@ function LCR.getActiveMovementAction(player)
 	local action = ISTimedActionQueue.getTimedActionQueue(player).current;
 	if action and (action.Type == "ClickToMoveTimedAction") then
 		return action;
+	end
+end
+
+function LCR.cancelActiveAction(player)
+	local action = ISTimedActionQueue.getTimedActionQueue(player).current;
+	if action then
+		action:forceStop();
 	end
 end
 

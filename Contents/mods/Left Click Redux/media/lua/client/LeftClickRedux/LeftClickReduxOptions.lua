@@ -1,6 +1,6 @@
-if not LeftClickRedux then
-	LeftClickRedux = {}
-end
+LeftClickRedux = {
+	GLOBALS = {}
+}
 
 local LCR = {
 	SINGLE_CLICK = 1,
@@ -18,7 +18,7 @@ LeftClickRedux.OPTIONS = {
 	suppressActionsWhileInventoryIsOpen = true,
 
 	isHoldToMove = true,
-	holdToMoveStyle = LCR.HOLD_PATHING,
+	holdToMoveStyle = LCR.HOLD_SIMPLE,
 
 	isClickToInteract = true,
 	isClickOnLooseItems = true,
