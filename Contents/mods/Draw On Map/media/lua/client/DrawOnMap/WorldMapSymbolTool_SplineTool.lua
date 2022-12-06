@@ -2,45 +2,6 @@ require "ISUI/Maps/ISWorldMapSymbols"
 
 local DEFAULT_SCALE = 3
 
-local SCALES = {
-	0.25,
-	0.5,
-	1,
-	2,
-	3,
-	4,
-	5,
-	7,
-	10,
-	15,
-	20,
-	30,
-}
-
-local SCALE_TO_INDEX = {}
-for i, v in ipairs(SCALES) do
-    SCALE_TO_INDEX[v] = i;
-end 
-
-
-local FILLS = {
-	0.00001,
-	0.125,
-	0.25,
-	0.375,
-	0.5,
-	0.625,
-	0.75,
-	0.875,
-	1,
-}
-
-local FILL_TO_INDEX = {}
-for i, v in ipairs(FILLS) do
-    FILL_TO_INDEX[v] = i;
-end 
-
-
 -- I planned to do splines originally, but the way the map works makes it unfeasible. So its just tons of circles instead.
 WorldMapSymbolTool_SplineTool = ISWorldMapSymbolTool:derive("WorldMapSymbolTool_SplineTool")
 
@@ -116,7 +77,7 @@ function WorldMapSymbolTool_SplineTool:renderSymbol(symbol, x, y)
 end
 
 function WorldMapSymbolTool_SplineTool:drawLine(x,y)
-	if self.symbolsAPI:getSymbolCount() > 125000 then -- Enforce a softcap on symbols before we hit the game's internal buffer limits
+	if self.symbolsAPI:getSymbolCount() > 250000 then -- I have altered the limit. Pray that I do not alter it further.
 		return
 	end
 
@@ -161,44 +122,12 @@ function WorldMapSymbolTool_SplineTool:addSymbol(worldX, worldY, sound)
 	end
 end
 
-function WorldMapSymbolTool_SplineTool:resetScale()
-	self.scale = DEFAULT_SCALE;
+function WorldMapSymbolTool_SplineTool:updateSizeValue(value)
+	self.scale = value
 end
 
-function WorldMapSymbolTool_SplineTool:scaleUp()
-	local index = SCALE_TO_INDEX[self.scale]
-	if index < #SCALES then
-		self.scale = SCALES[index + 1]
-	end
-end
-
-function WorldMapSymbolTool_SplineTool:scaleDown()
-	local index = SCALE_TO_INDEX[self.scale]
-	if index > 1 then
-		self.scale = SCALES[index - 1]
-	end
-end
-
-function WorldMapSymbolTool_SplineTool:resetFill()
-	if self.fill ~= 1 then
-		self.fill = 1;
-	else
-		self.fill =  FILLS[1]
-	end
-end
-
-function WorldMapSymbolTool_SplineTool:fillUp()
-	local index = FILL_TO_INDEX[self.fill]
-	if index < #FILLS then
-		self.fill = FILLS[index + 1]
-	end
-end
-
-function WorldMapSymbolTool_SplineTool:fillDown()
-	local index = FILL_TO_INDEX[self.fill]
-	if index > 1 then
-		self.fill = FILLS[index - 1]
-	end
+function WorldMapSymbolTool_SplineTool:updateFillValue(value)
+	self.fill = value
 end
 
 function WorldMapSymbolTool_SplineTool:new(symbolsUI)

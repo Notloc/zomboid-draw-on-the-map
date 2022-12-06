@@ -7,14 +7,19 @@ ISWorldMap.handleFreeHandButtonClick = function(self)
 	self.freeHandUI:setVisible(not self.freeHandUI:getIsVisible())
 end
 
+local function createFreeHandUI(symbolsUI)
+    local freeHandUI = FreeHandUI:new(20, getCore():getScreenHeight() - 240, 225, 150, symbolsUI)
+    freeHandUI:setAnchorLeft(true)
+	freeHandUI:setAnchorRight(false)
+    freeHandUI:init()
+    return freeHandUI
+end
+
 ISWorldMap.createChildren_prepatch_drawonmap = ISWorldMap.createChildren;
 ISWorldMap.createChildren = function(self)
 	self:createChildren_prepatch_drawonmap();
 
-    self.freeHandUI = FreeHandUI:new(20, getCore():getScreenHeight() - 220, 225, 150, self.symbolsUI)
-    self.freeHandUI:setAnchorLeft(true)
-	self.freeHandUI:setAnchorRight(false)
-    self.freeHandUI:init()
+    self.freeHandUI = createFreeHandUI(self.symbolsUI)
     self:addChild(self.freeHandUI)
 
     _freeHandUi = self.freeHandUI
@@ -36,6 +41,24 @@ ISWorldMap.createChildren = function(self)
 			self:setY(getCore():getScreenHeight() - offset)
 		end
 	end
+end
+
+ISMap.createChildren_prepatch_drawonmap = ISMap.createChildren;
+ISMap.createChildren = function(self)
+	self:createChildren_prepatch_drawonmap();
+
+    self.freeHandUI = createFreeHandUI(self.symbolsUI)
+    self.freeHandUI:setVisible(false)
+    self:addChild(self.freeHandUI)
+end
+
+ISMap.onButtonClick_prepatch_drawonmap = ISMap.onButtonClick;
+ISMap.onButtonClick = function(self, button)
+	self:onButtonClick_prepatch_drawonmap(button);
+
+	if button.internal == "SYMBOLS" then
+		self.freeHandUI:setVisible(self.symbolsUI:isVisible())
+    end  
 end
 
 local function OnResolutionChange()
