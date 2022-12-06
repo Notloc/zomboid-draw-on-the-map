@@ -1,5 +1,7 @@
 WorldMapSymbolTool_FreeHandEraser = ISWorldMapSymbolTool:derive("WorldMapSymbolTool_FreeHandEraser")
 
+local soundCap = false;
+
 function WorldMapSymbolTool_FreeHandEraser:activate()
 end
 
@@ -22,11 +24,21 @@ end
 
 function WorldMapSymbolTool_FreeHandEraser:onMouseMove(dx, dy)
 	if self.mouseHeld then
-		self:removeAnnotation()
-		for i=1,3 do
-			self.symbolsUI:checkAnnotationForMoveMouse();
-			self:removeAnnotation()
-		end
+		local x = self.symbolsUI.mapUI:getMouseX()
+		local y = self.symbolsUI.mapUI:getMouseY()
+		soundCap = false;
+
+		-- Check around the mouse to erase easier
+		local spread = 5;
+		self:eraseAnnotation(x, y)
+		self:eraseAnnotation(x+spread, y)
+		self:eraseAnnotation(x-spread, y)
+		self:eraseAnnotation(x, y+spread)
+		self:eraseAnnotation(x, y-spread)
+		self:eraseAnnotation(x-spread, y-spread)
+		self:eraseAnnotation(x+spread, y+spread)
+		self:eraseAnnotation(x-spread, y+spread)
+		self:eraseAnnotation(x+spread, y-spread)
 	end
 	return false
 end
@@ -42,13 +54,12 @@ function WorldMapSymbolTool_FreeHandEraser:onRightMouseUp(x, y)
 end
 
 function WorldMapSymbolTool_FreeHandEraser:render()
-	self.symbolsUI:checkAnnotationForRemoveMouse()
-	self.symbolsUI:checkAnnotationForRemoveJoypad()
+	--self.symbolsUI:checkAnnotationForRemoveMouse()
+	--self.symbolsUI:checkAnnotationForRemoveJoypad()
 end
 
 function WorldMapSymbolTool_FreeHandEraser:onJoypadDownInMap(button, joypadData)
 	if button == Joypad.AButton then
-		self:removeAnnotation()
 	end
 end
 
@@ -59,21 +70,15 @@ function WorldMapSymbolTool_FreeHandEraser:getJoypadAButtonText()
 	return nil
 end
 
-function WorldMapSymbolTool_FreeHandEraser:removeAnnotation()
-	if self.symbolsUI.mouseOverNote then
-		self.symbolsAPI:removeSymbolByIndex(self.symbolsUI.mouseOverNote)
-		self.symbolsUI.mouseOverNote = nil
-		if self.symbolsUI.character then
+function WorldMapSymbolTool_FreeHandEraser:eraseAnnotation(x, y)
+	local index = self.symbolsAPI:hitTest(x, y)
+	if index ~= -1 then
+		self.symbolsAPI:removeSymbolByIndex(index)
+		if self.symbolsUI.character and not soundCap then
+			soundCap = true
 			self.symbolsUI.character:playSoundLocal("MapRemoveMarking")
 		end
-		return true
 	end
-	if self.symbolsUI.mouseOverSymbol then
-		self.symbolsAPI:removeSymbolByIndex(self.symbolsUI.mouseOverSymbol)
-		self.symbolsUI.mouseOverSymbol = nil
-		return true
-	end
-	return false
 end
 
 function WorldMapSymbolTool_FreeHandEraser:new(symbolsUI)

@@ -116,7 +116,7 @@ function WorldMapSymbolTool_SplineTool:renderSymbol(symbol, x, y)
 end
 
 function WorldMapSymbolTool_SplineTool:drawLine(x,y)
-	if self.symbolsAPI:getSymbolCount() > 115000 then -- Enforce a softcap on symbols before we hit the game's internal buffer limits
+	if self.symbolsAPI:getSymbolCount() > 125000 then -- Enforce a softcap on symbols before we hit the game's internal buffer limits
 		return
 	end
 

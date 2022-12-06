@@ -12,12 +12,12 @@ end
 function FreeHandUI:init()
 	local FONT_HGT_SMALL = getTextManager():getFontHeight(UIFont.Small)
 
-	local btnWid = self.width - 20 * 2
+	local btnWid = self.width - 40
 	local btnHgt = FONT_HGT_SMALL + 2 * 2
 
 	local y = 10
 
-	self.splineBtn = ISButton:new(20, y, btnWid, btnHgt, "Draw", self, FreeHandUI.onButtonClick)
+	self.splineBtn = ISButton:new(20, y, btnWid, btnHgt, getText("UI_DrawOnMap_Draw"), self, FreeHandUI.onButtonClick)
 	self.splineBtn.internal = "FREE_HAND"
 	self.splineBtn:initialise()
 	self.splineBtn:instantiate()
@@ -26,7 +26,7 @@ function FreeHandUI:init()
 
 	y = self.splineBtn:getBottom() + 10
 
-	self.freeHandEraseBtn = ISButton:new(20, y, btnWid, btnHgt, "Erase", self, FreeHandUI.onButtonClick)
+	self.freeHandEraseBtn = ISButton:new(20, y, btnWid, btnHgt, getText("UI_DrawOnMap_Erase"), self, FreeHandUI.onButtonClick)
 	self.freeHandEraseBtn.internal = "FREE_HAND_ERASE"
 	self.freeHandEraseBtn:initialise()
 	self.freeHandEraseBtn:instantiate()
@@ -35,9 +35,10 @@ function FreeHandUI:init()
 
 	y = self.freeHandEraseBtn:getBottom() + 10
 
-	local sizeControlButtonW = (btnWid - 10) / 4
-
-	self.freeHandSizeBtn = ISButton:new(25 + sizeControlButtonW, y, sizeControlButtonW * 2, btnHgt, "Line Size: 3", self, FreeHandUI.onButtonClick)
+	local sizeControlButtonW = 30
+	local otherBtnWid = btnWid - 10 - (sizeControlButtonW * 2);
+	
+	self.freeHandSizeBtn = ISButton:new(25 + sizeControlButtonW, y, otherBtnWid, btnHgt, getText("UI_DrawOnMap_Thickness")..": 3", self, FreeHandUI.onButtonClick)
 	self.freeHandSizeBtn.internal = "FREE_HAND_SIZE"
 	self.freeHandSizeBtn:initialise()
 	self.freeHandSizeBtn:instantiate()
@@ -51,7 +52,7 @@ function FreeHandUI:init()
 	self.sizeDownBtn.borderColor.a = 0.0
 	self:addChild(self.sizeDownBtn)
 
-	self.sizeUpBtn = ISButton:new(30 + sizeControlButtonW * 3, y, sizeControlButtonW, btnHgt, "+", self, FreeHandUI.onButtonClick)
+	self.sizeUpBtn = ISButton:new(30 + sizeControlButtonW + otherBtnWid, y, sizeControlButtonW, btnHgt, "+", self, FreeHandUI.onButtonClick)
 	self.sizeUpBtn.internal = "FREE_HAND_SIZE_UP"
 	self.sizeUpBtn:initialise()
 	self.sizeUpBtn:instantiate()
@@ -60,7 +61,7 @@ function FreeHandUI:init()
 
 	y = self.freeHandSizeBtn:getBottom() + 10
 
-	self.lineSpacingBtn = ISButton:new(25 + sizeControlButtonW, y, sizeControlButtonW * 2, btnHgt, "Line Fill: 1", self, FreeHandUI.onButtonClick)
+	self.lineSpacingBtn = ISButton:new(25 + sizeControlButtonW, y, otherBtnWid, btnHgt, getText("UI_DrawOnMap_Fill")..": 1", self, FreeHandUI.onButtonClick)
 	self.lineSpacingBtn.internal = "LINE_SPACING"
 	self.lineSpacingBtn:initialise()
 	self.lineSpacingBtn:instantiate()
@@ -74,7 +75,7 @@ function FreeHandUI:init()
 	self.lineSpacingDownBtn.borderColor.a = 0.0
 	self:addChild(self.lineSpacingDownBtn)
 
-	self.lineSpacingUpBtn = ISButton:new(30 + sizeControlButtonW * 3, y, sizeControlButtonW, btnHgt, "+", self, FreeHandUI.onButtonClick)
+	self.lineSpacingUpBtn = ISButton:new(30 + sizeControlButtonW + otherBtnWid, y, sizeControlButtonW, btnHgt, "+", self, FreeHandUI.onButtonClick)
 	self.lineSpacingUpBtn.internal = "LINE_SPACING_UP"
 	self.lineSpacingUpBtn:initialise()
 	self.lineSpacingUpBtn:instantiate()
@@ -127,17 +128,17 @@ function FreeHandUI:onButtonClick(button)
 
 	if button.internal == "FREE_HAND_SIZE" then
 		symbolsUI.tools.SplineTool:resetScale();
-		self.freeHandSizeBtn.title = "Line Size: " .. symbolsUI.tools.SplineTool.scale
+		self.freeHandSizeBtn.title = getText("UI_DrawOnMap_Thickness") .. ": " .. symbolsUI.tools.SplineTool.scale
 	end
 
 	if button.internal == "FREE_HAND_SIZE_DOWN" then
 		symbolsUI.tools.SplineTool:scaleDown();
-		self.freeHandSizeBtn.title = "Line Size: " .. symbolsUI.tools.SplineTool.scale
+		self.freeHandSizeBtn.title = getText("UI_DrawOnMap_Thickness") .. ": " .. symbolsUI.tools.SplineTool.scale
 	end
 
 	if button.internal == "FREE_HAND_SIZE_UP" then
 		symbolsUI.tools.SplineTool:scaleUp();
-		self.freeHandSizeBtn.title = "Line Size: " .. symbolsUI.tools.SplineTool.scale
+		self.freeHandSizeBtn.title = getText("UI_DrawOnMap_Thickness") .. ": " .. symbolsUI.tools.SplineTool.scale
 	end
 
 	if button.internal == "LINE_SPACING" then
@@ -159,9 +160,9 @@ end
 function FreeHandUI:updateFillText()
 	local fill = self.symbolsUI.tools.SplineTool.fill;
 	if fill > 0.01 then
-		self.lineSpacingBtn.title = "Line Fill: " .. fill
+		self.lineSpacingBtn.title = getText("UI_DrawOnMap_Fill") .. ": " .. fill
 	else
-		self.lineSpacingBtn.title = "Line Fill: Off"
+		self.lineSpacingBtn.title = getText("UI_DrawOnMap_Fill") .. ": -"
 	end
 end
 
