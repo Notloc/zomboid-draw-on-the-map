@@ -17,9 +17,9 @@ local FONT_HEIGHT = getTextManager():getFontHeight(FONT)
 function FreeHandUI:new(x, y, width, height, symbolsUI)
 	local o = ISPanelJoypad:new(x, y, width, height);
     o.moveWithMouse = true;
+    o.symbolsUI = symbolsUI;
     setmetatable(o, self)
     self.__index = self
-    self.symbolsUI = symbolsUI;
     return o
 end
 
