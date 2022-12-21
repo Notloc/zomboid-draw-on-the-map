@@ -1,6 +1,6 @@
 UI_PL = {
 	UI_DrawOnMap_Draw = "Narysuj",
 	UI_DrawOnMap_Erase = "Gumka",
-	UI_DrawOnMap_Thickness = "GruboÅ›Ä‡",
-	UI_DrawOnMap_Fill = "WypeÅ‚nij"
+	UI_DrawOnMap_Thickness = "Gruboœæ",
+	UI_DrawOnMap_Fill = "Wype³nij"
 }
