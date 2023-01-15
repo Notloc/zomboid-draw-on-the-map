@@ -8,6 +8,7 @@ WorldMapSymbolTool_SplineTool = ISWorldMapSymbolTool:derive("WorldMapSymbolTool_
 function WorldMapSymbolTool_SplineTool:activate()
 	self.drawingActive = false;
 	self.rightDown = false;
+	self.symbolsUI:setVisible(true) -- this ensures the preview is visible
 end
 
 function WorldMapSymbolTool_SplineTool:deactivate()
@@ -58,10 +59,12 @@ function WorldMapSymbolTool_SplineTool:onRightMouseUp(x, y)
 end 
 
 function WorldMapSymbolTool_SplineTool:render()
+	local symbol = self:getSelectedSymbol()
+
 	if (self.symbolsUI.playerNum ~= 0) or (JoypadState.players[self.symbolsUI.playerNum+1] and not wasMouseActiveMoreRecentlyThanJoypad()) then
-		self:renderSymbol(self.symbolsUI.selectedSymbol, self.mapUI.width / 2, self.mapUI.height / 2)
+		self:renderSymbol(symbol, self.mapUI.width / 2, self.mapUI.height / 2)
 	else
-		self:renderSymbol(self.symbolsUI.selectedSymbol, self:getMouseX(), self:getMouseY())
+		self:renderSymbol(symbol, self:getMouseX(), self:getMouseY())
 	end
 end
 
@@ -81,7 +84,7 @@ function WorldMapSymbolTool_SplineTool:drawLine(x,y)
 		return
 	end
 
-	local limit = ISMap.SCALE * (2 * self.scale / DEFAULT_SCALE / self.fill);
+	local limit = ISMap.SCALE * (2.4 * self.scale / DEFAULT_SCALE / self.fill);
 
 	local worldX = self.mapAPI:uiToWorldX(x, y)
 	local worldY = self.mapAPI:uiToWorldY(x, y)
@@ -92,7 +95,7 @@ function WorldMapSymbolTool_SplineTool:drawLine(x,y)
 		local yDiff = worldY - self.lastWorldY;
 
 		local divisor = diff/limit;
-		divisor = math.floor(divisor+0.5)
+		divisor = math.floor(divisor) + 1
 
 		xDiff = xDiff/divisor;
 		yDiff = yDiff/divisor;
@@ -128,6 +131,23 @@ end
 
 function WorldMapSymbolTool_SplineTool:updateFillValue(value)
 	self.fill = value
+end
+
+function WorldMapSymbolTool_SplineTool:getSelectedSymbol()
+	if self.symbolsUI.selectedSymbol then
+		return self.symbolsUI.selectedSymbol
+	end
+	
+	if self.defaultSymbol then
+		return self.defaultSymbol
+	end
+
+	for _, symbol in ipairs(self.symbolsUI.buttonList) do
+		if symbol.tex == self.lineTex then
+			self.defaultSymbol = symbol
+			return symbol
+		end
+	end
 end
 
 function WorldMapSymbolTool_SplineTool:new(symbolsUI)

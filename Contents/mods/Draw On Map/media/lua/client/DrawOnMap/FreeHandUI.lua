@@ -1,15 +1,15 @@
 FreeHandUI = ISPanelJoypad:derive("FreeHandUI")
 require "ISUI/ISSliderPanel"
 
-local MIN_FILL = 0.0001
+local MIN_FILL = 0.05
 local MAX_FILL = 1.0
 local DEFAULT_FILL = 1.0
-local STEP_FILL = 0.1
+local STEP_FILL = 0.05
 
-local MIN_SIZE = 0.1
-local MAX_SIZE = 30.0
-local DEFAULT_SIZE = 3.0
-local STEP_SIZE = 0.1
+local MIN_SIZE = 0.5
+local MAX_SIZE = 25.0
+local DEFAULT_SIZE = 2.5
+local STEP_SIZE = 0.5
 
 local FONT = UIFont.Small
 local FONT_HEIGHT = getTextManager():getFontHeight(FONT)

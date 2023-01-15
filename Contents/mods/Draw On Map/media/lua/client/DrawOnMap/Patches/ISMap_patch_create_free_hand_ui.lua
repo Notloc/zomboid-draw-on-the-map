@@ -64,7 +64,7 @@ end
 local function OnResolutionChange()
 	if _freeHandUi then
 		_freeHandUi:setX(20)
-		_freeHandUi:setY(getCore():getScreenHeight() - 220)
+		_freeHandUi:setY(getCore():getScreenHeight() - 240)
 	end
 end
 
