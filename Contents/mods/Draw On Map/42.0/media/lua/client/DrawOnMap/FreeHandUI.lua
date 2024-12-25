@@ -69,7 +69,7 @@ function FreeHandUI:init()
 
 	self.fillTextY = y;
 	y = y + FONT_HEIGHT * 1.25
-	self.fillSlider = FreeHandUI.createSlider(self.symbolsUI.tools.FreeHandTool, 20, y, sliderWidth, 15, MIN_FILL, MAX_FILL, STEP_FILL, DEFAULT_FILL, self.symbolsUI.tools.FreeHandTool.updateFillValue)
+	self.fillSlider = FreeHandUI.createSlider(self.symbolsUI.tools.FreeHandTool, 20, y, sliderWidth, 15, MIN_FILL, MAX_FILL, STEP_FILL, DEFAULT_FILL, self.updateFillValue)
 	self:addChild(self.fillSlider)
 
 	self:insertNewLineOfButtons(self.freeHandBtn)
@@ -112,7 +112,7 @@ end
 
 function FreeHandUI:prerender()
 	ISPanelJoypad.prerender(self)
-	
+
 	self:checkInventory()
 	self.freeHandBtn.borderColor.a = (self.symbolsUI.currentTool == self.symbolsUI.tools.FreeHandTool) and 1 or 0
 	self.lineBtn.borderColor.a = (self.symbolsUI.currentTool == self.symbolsUI.tools.LineTool) and 1 or 0
@@ -123,18 +123,33 @@ function FreeHandUI:prerender()
 end
 
 function FreeHandUI:checkInventory()
-	self.freeHandBtn.enable = self.symbolsUI.addNoteBtn.enable;
-	self.freeHandBtn.tooltip = self.symbolsUI.addNoteBtn.tooltip;
+	local canWrite = self.symbolsUI:canWrite()
+	local tooltip = canWrite and nil or getText("Tooltip_Map_CantWrite")
 
-	self.freeHandEraseBtn.enable = self.symbolsUI.removeBtn.enable;
-	self.freeHandEraseBtn.tooltip = self.symbolsUI.removeBtn.tooltip;
+	self.freeHandBtn.enable = canWrite
+	self.freeHandBtn.tooltip = tooltip
+	self.lineBtn.enable = canWrite
+	self.lineBtn.tooltip = tooltip
 
-	if self.symbolsUI.currentTool == self.symbolsUI.tools.FreeHandTool and not self.freeHandBtn.enable then
+	local canErase = self.symbolsUI:canErase()
+	self.freeHandEraseBtn.enable = canErase
+	self.freeHandEraseBtn.tooltip = canErase and nil or getText("Tooltip_Map_CantErase")
+
+	if not canWrite and self:usingDrawingTool() then
 		self.symbolsUI:setCurrentTool(nil)
 	end
-	if self.symbolsUI.currentTool == self.symbolsUI.tools.FreeHandEraseTool and not self.freeHandEraseBtn.enable then
+	if not canErase and self:usingEraserTool() then
 		self.symbolsUI:setCurrentTool(nil)
 	end
+end
+
+function FreeHandUI:usingDrawingTool()
+	local current = self.symbolsUI.currentTool
+	return current == self.symbolsUI.tools.FreeHandTool or current == self.symbolsUI.tools.LineTool
+end
+
+function FreeHandUI:usingEraserTool()
+	return self.symbolsUI.currentTool == self.symbolsUI.tools.FreeHandEraseTool
 end
 
 function FreeHandUI:onButtonClick(button)
