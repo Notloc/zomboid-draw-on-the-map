@@ -1,6 +1,6 @@
 UI_RU = {
-    UI_DrawOnMap_Draw = "Нарисовать",
-    UI_DrawOnMap_Erase = "Стереть",
-    UI_DrawOnMap_Thickness = "Толщина",
-    UI_DrawOnMap_Fill = "Плотность",
+    UI_DrawOnMap_Draw = "РќР°СЂРёСЃРѕРІР°С‚СЊ",
+    UI_DrawOnMap_Erase = "РЎС‚РµСЂРµС‚СЊ",
+    UI_DrawOnMap_Thickness = "РўРѕР»С‰РёРЅР°",
+    UI_DrawOnMap_Fill = "РџР»РѕС‚РЅРѕСЃС‚СЊ",
 }

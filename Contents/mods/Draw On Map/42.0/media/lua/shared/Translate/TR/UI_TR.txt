@@ -1,6 +1,6 @@
 UI_TR = {
-    UI_DrawOnMap_Draw = "Çiz",
+    UI_DrawOnMap_Draw = "Ã‡iz",
     UI_DrawOnMap_Erase = "Sil",
-    UI_DrawOnMap_Thickness = "Kalýnlýk",
+    UI_DrawOnMap_Thickness = "KalÄ±nlÄ±k",
     UI_DrawOnMap_Fill = "Doldur"
 }

@@ -1,6 +1,6 @@
 UI_UA = {
-	UI_DrawOnMap_Draw = "Малювати",
-	UI_DrawOnMap_Erase = "Стерти",
-	UI_DrawOnMap_Thickness = "Товщина",
-	UI_DrawOnMap_Fill = "Щільність",
+	UI_DrawOnMap_Draw = "РњР°Р»СЋРІР°С‚Рё",
+	UI_DrawOnMap_Erase = "РЎС‚РµСЂС‚Рё",
+	UI_DrawOnMap_Thickness = "РўРѕРІС‰РёРЅР°",
+	UI_DrawOnMap_Fill = "Р©С–Р»СЊРЅС–СЃС‚СЊ",
 }
