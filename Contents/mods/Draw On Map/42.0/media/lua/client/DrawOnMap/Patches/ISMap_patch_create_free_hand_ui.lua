@@ -8,7 +8,7 @@ ISWorldMap.handleFreeHandButtonClick = function(self)
 end
 
 local function createFreeHandUI(symbolsUI)
-    local freeHandUI = FreeHandUI:new(20, getCore():getScreenHeight() - 270, 225, 180, symbolsUI)
+    local freeHandUI = FreeHandUI:new(20, getCore():getScreenHeight() - 320, 225, 180, symbolsUI)
     freeHandUI:setAnchorLeft(true)
 	freeHandUI:setAnchorRight(false)
     freeHandUI:init()
